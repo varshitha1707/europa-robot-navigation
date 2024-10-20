@@ -12,29 +12,34 @@ A robot’s position is represented by:
 - A direction (`N`, `E`, `S`, `W`).
 
 ## Input Format
-- The first line: two integers representing the upper-right coordinates of the plateau (lower-left is assumed to be `0 0`).
+- The first line: two integers representing the upper-right coordinates of the plateau
+  (lower-left is assumed to be `0 0`).
 - Each robot gets two lines:
   1. Initial position in the form `x y orientation`.
   2. A string of commands (`L`, `R`, `M`).
 
 ### Sample Input
+```
 5 5 
 1 2 N 
 LMLMLMLMM 
 3 3 E 
 MMRMMRMRRM
+```
 
 
 ## Output Format
 The final position of each robot is printed as `x y orientation`.
 
 ### Expected Output
+```
 1 3 N 
 5 1 E
+```
 
 ## Assumptions
 - Robots will not move outside the plateau’s boundaries.
-- Robots execute their commands sequentially.
+- Robots execute their commands sequentially - robots will only move one after the other, not together.
 - Input is always valid and correctly formatted.
 
 ## Edge Cases
@@ -43,6 +48,7 @@ The final position of each robot is printed as `x y orientation`.
 - **Invalid commands**: Not handled, and will likely break the system.
 
 ### Sample Edge Case Input
+```
 3 3 
 0 0 S 
 MMM 
@@ -50,11 +56,14 @@ MMM
 MMM 
 3 3 E 
 RRRRMM
+```
 
 ### Expected Output:
+```
 0 0 S
 0 0 W 
 3 3 E
+```
 
 ## Code Breakdown
 1. **`Plateau` Class**: Represents the grid and ensures robots stay within bounds.
@@ -71,18 +80,19 @@ RRRRMM
 
 ### Steps
 1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   ```
 2. Navigate to the project directory:
     ```bash
     cd europa-robot-navigation
     ```
-3. Compile TypeScript code:
+3. Install the node modules:
+    ```bash
+    npm install
+    ```
+4. Compile TypeScript code:
     ```bash
     npx tsc navigation.ts
     ```
-4. Run the compiled JavaScript:
+5. Run the compiled JavaScript:
     ```bash
     node navigation.js
     ```
