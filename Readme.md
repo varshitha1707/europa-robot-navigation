@@ -68,8 +68,8 @@ RRRRMM
 ## Code Breakdown
 1. **`Plateau` Class**: Represents the grid and ensures robots stay within bounds.
 2. **`Robot` Class**: Tracks the robot's position and handles movements and rotations.
-3. **`Controller` Class**: Manages multiple robots and executes their commands sequentially.
-4. **`parseInput()` Function**: Parses the input data into structured format for easier processing.
+3. **`Controller` Class**: Manages multiple robots and runs their commands sequentially.
+4. **`parseInput()` Function**: Parses the input data into structured format.
 5. **`main()` Function**: The entry point that initializes the plateau and processes robots' movements.
 
 ## How to Run
