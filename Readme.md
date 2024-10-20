@@ -43,9 +43,9 @@ The final position of each robot is printed as `x y orientation`.
 - Input is always valid and correctly formatted.
 
 ## Edge Cases
-- **Moving out of bounds**: Robots will not move beyond the grid.
+- **Moving out of bounds**: Robots will not move beyond the grid, if an initial position is given to be out of bounds, it will snap to the grid's bounds.
 - **Empty commands**: Robots remain in their initial position.
-- **Invalid commands**: Not handled, and will likely break the system.
+- **Invalid commands**: If formatted properly, will be caught and an error will be thrown.
 
 ### Sample Edge Case Input
 ```

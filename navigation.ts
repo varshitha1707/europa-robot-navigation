@@ -21,12 +21,25 @@ class Robot {
   private heading: string;
   private plateau: Plateau;
   private readonly DIRECTIONS: string[] = ["N", "E", "S", "W"];
+  private readonly COMMANDS: string[] = ["L", "R", "M"];
 
   constructor(x: number, y: number, heading: string, plateau: Plateau) {
+    if (!this.isValidHeading(heading)) {
+      throw new Error(`Invalid heading '${heading}'. Allowed values: N, E, S, W.`);
+    }
+
     this.x = x;
     this.y = y;
     this.heading = heading;
     this.plateau = plateau;
+  }
+
+  private isValidHeading(heading: string): boolean {
+    return this.DIRECTIONS.indexOf(heading) !== -1;
+  }
+
+  private isValidCommand(command: string): boolean {
+    return this.COMMANDS.indexOf(command) !== -1;
   }
 
   move() {
@@ -69,6 +82,10 @@ class Robot {
   runCommands(commands: string) {
     // function which runs the commands based on directions given by the user.
     for (let command of commands) {
+      if (!this.isValidCommand(command)) {
+        throw new Error(`Invalid command '${command}'. Allowed values: L, R, M.`);
+      }
+
       if (command === "L") {
         this.rotateL();
       } else if (command === "R") {
@@ -95,9 +112,14 @@ class Controller {
   ) {
     robotsInfo.forEach((robotInfo) => {
       const [x, y, orientation] = robotInfo.position;
-      const robot = new Robot(x, y, orientation, plateau);
-      robot.runCommands(robotInfo.commands);
-      this.robots.push(robot);
+
+      try {
+        const robot = new Robot(x, y, orientation, plateau);
+        robot.runCommands(robotInfo.commands);
+        this.robots.push(robot);
+      } catch (error:any) {
+        console.error(error.message);
+      }
     });
   }
 
@@ -113,8 +135,7 @@ function parseInput(inputData: string): {
 } {
   const lines = inputData.trim().split("\n");
   const plateauSize = lines[0].split(" ").map(Number) as [number, number];
-  const robotsInfo: { position: [number, number, string]; commands: string }[] =
-    [];
+  const robotsInfo: { position: [number, number, string]; commands: string }[] = [];
 
   for (let i = 1; i < lines.length; i += 2) {
     const [x, y, heading] = lines[i].split(" ");
@@ -147,7 +168,7 @@ const inputData = `5 5
 LMLMLMLMM
 3 3 E
 MMRMMRMRRM
-4 6 E
+4 6 X
 LMRRMMRLRM`;
 
 main(inputData);

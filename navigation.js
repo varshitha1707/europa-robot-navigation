@@ -12,11 +12,21 @@ var Plateau = /** @class */ (function () {
 var Robot = /** @class */ (function () {
     function Robot(x, y, heading, plateau) {
         this.DIRECTIONS = ["N", "E", "S", "W"];
+        this.COMMANDS = ["L", "R", "M"];
+        if (!this.isValidHeading(heading)) {
+            throw new Error("Invalid heading '".concat(heading, "'. Allowed values: N, E, S, W."));
+        }
         this.x = x;
         this.y = y;
         this.heading = heading;
         this.plateau = plateau;
     }
+    Robot.prototype.isValidHeading = function (heading) {
+        return this.DIRECTIONS.indexOf(heading) !== -1;
+    };
+    Robot.prototype.isValidCommand = function (command) {
+        return this.COMMANDS.indexOf(command) !== -1;
+    };
     Robot.prototype.move = function () {
         // function for movement based on direction
         if (this.heading === "N" &&
@@ -50,6 +60,9 @@ var Robot = /** @class */ (function () {
         // function which runs the commands based on directions given by the user.
         for (var _i = 0, commands_1 = commands; _i < commands_1.length; _i++) {
             var command = commands_1[_i];
+            if (!this.isValidCommand(command)) {
+                throw new Error("Invalid command '".concat(command, "'. Allowed values: L, R, M."));
+            }
             if (command === "L") {
                 this.rotateL();
             }
@@ -76,9 +89,14 @@ var Controller = /** @class */ (function () {
         var _this = this;
         robotsInfo.forEach(function (robotInfo) {
             var _a = robotInfo.position, x = _a[0], y = _a[1], orientation = _a[2];
-            var robot = new Robot(x, y, orientation, plateau);
-            robot.runCommands(robotInfo.commands);
-            _this.robots.push(robot);
+            try {
+                var robot = new Robot(x, y, orientation, plateau);
+                robot.runCommands(robotInfo.commands);
+                _this.robots.push(robot);
+            }
+            catch (error) {
+                console.error(error.message);
+            }
         });
     };
     Controller.prototype.getFinalPositions = function () {
@@ -111,5 +129,5 @@ function main(inputData) {
     var finalPositions = controller.getFinalPositions();
     finalPositions.forEach(function (position) { return console.log(position); });
 }
-var inputData = "5 5\n6 2 N\nLMLMLMLMM\n3 3 E\nMMRMMRMRRM\n4 6 E\nLMRRMMRLRM";
+var inputData = "5 5\n6 2 N\nLMLMLMLMM\n3 3 E\nMMRMMRMRRM\n4 6 X\nLMRRMMRLRM";
 main(inputData);
