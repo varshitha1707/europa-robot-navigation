@@ -27,22 +27,29 @@ var Robot = /** @class */ (function () {
     Robot.prototype.isValidCommand = function (command) {
         return this.COMMANDS.indexOf(command) !== -1;
     };
-    Robot.prototype.move = function () {
+    Robot.prototype.move = function (invalidPositions) {
         // function for movement based on direction
+        console.log("currentPosition", this.x, this.y);
         if (this.heading === "N" &&
-            this.plateau.isWithinBounds(this.x, this.y + 1)) {
+            this.plateau.isWithinBounds(this.x, this.y + 1) &&
+            this.isValidPosition({ position: [this.x, this.y + 1] }, invalidPositions)) {
             this.y += 1;
         }
         else if (this.heading === "E" &&
-            this.plateau.isWithinBounds(this.x + 1, this.y)) {
+            this.plateau.isWithinBounds(this.x + 1, this.y) &&
+            this.isValidPosition({ position: [this.x + 1, this.y] }, invalidPositions)) {
+            console.log(this.isValidPosition({ position: [this.x + 1, this.y] }, invalidPositions), "is Valid position here");
+            console.log(invalidPositions, "is invalid position");
             this.x += 1;
         }
         else if (this.heading === "S" &&
-            this.plateau.isWithinBounds(this.x, this.y - 1)) {
+            this.plateau.isWithinBounds(this.x, this.y - 1) &&
+            this.isValidPosition({ position: [this.x, this.y - 1] }, invalidPositions)) {
             this.y -= 1;
         }
         else if (this.heading === "W" &&
-            this.plateau.isWithinBounds(this.x - 1, this.y)) {
+            this.plateau.isWithinBounds(this.x - 1, this.y) &&
+            this.isValidPosition({ position: [this.x - 1, this.y] }, invalidPositions)) {
             this.x -= 1;
         }
     };
@@ -56,7 +63,7 @@ var Robot = /** @class */ (function () {
         var currentIdx = this.DIRECTIONS.indexOf(this.heading);
         this.heading = this.DIRECTIONS[(currentIdx + 1) % 4];
     };
-    Robot.prototype.runCommands = function (commands) {
+    Robot.prototype.runCommands = function (commands, invalidPositions) {
         // function which runs the commands based on directions given by the user.
         for (var _i = 0, commands_1 = commands; _i < commands_1.length; _i++) {
             var command = commands_1[_i];
@@ -70,7 +77,7 @@ var Robot = /** @class */ (function () {
                 this.rotateR();
             }
             else if (command === "M") {
-                this.move();
+                this.move(invalidPositions);
             }
         }
     };
@@ -78,12 +85,30 @@ var Robot = /** @class */ (function () {
         //function to give the position of the particular robot
         return "".concat(this.x, " ").concat(this.y, " ").concat(this.heading);
     };
+    Robot.prototype.getInvalidPosition = function () {
+        return {
+            "position": [this.x, this.y]
+        };
+    };
+    Robot.prototype.isValidPosition = function (robotNextPosition, invalidPositions) {
+        for (var i = 0; i < invalidPositions.length; i++) {
+            var pos = invalidPositions[i];
+            if (robotNextPosition.position[0] === pos.position[0] &&
+                robotNextPosition.position[1] === pos.position[1]) {
+                console.log(robotNextPosition.position, "nextPosition");
+                console.log("collision alert");
+                return false;
+            }
+        }
+        return true;
+    };
     return Robot;
 }());
 var Controller = /** @class */ (function () {
     function Controller() {
         // class to manage multiple robots and get their final positions
         this.robots = [];
+        this.invalidPositions = [];
     }
     Controller.prototype.initializeRobots = function (plateau, robotsInfo) {
         var _this = this;
@@ -91,7 +116,7 @@ var Controller = /** @class */ (function () {
             var _a = robotInfo.position, x = _a[0], y = _a[1], orientation = _a[2];
             try {
                 var robot = new Robot(x, y, orientation, plateau);
-                robot.runCommands(robotInfo.commands);
+                robot.runCommands(robotInfo.commands, _this.robots.map(function (robot) { return robot.getInvalidPosition(); }));
                 _this.robots.push(robot);
             }
             catch (error) {
@@ -129,5 +154,5 @@ function main(inputData) {
     var finalPositions = controller.getFinalPositions();
     finalPositions.forEach(function (position) { return console.log(position); });
 }
-var inputData = "5 5\n6 2 N\nLMLMLMLMM\n3 3 E\nMMRMMRMRRM\n4 6 X\nLMRRMMRLRM";
+var inputData = "5 5\n1 2 N\nLMLMLMLMM\n0 4 S\nMLM";
 main(inputData);

@@ -42,26 +42,31 @@ class Robot {
     return this.COMMANDS.indexOf(command) !== -1;
   }
 
-  move() {
+  move(invalidPositions: { position: [number, number]}[]) {
     // function for movement based on direction
+    console.log("currentPosition", this.x, this.y)
     if (
       this.heading === "N" &&
-      this.plateau.isWithinBounds(this.x, this.y + 1)
+      this.plateau.isWithinBounds(this.x, this.y + 1) &&
+      this.isValidPosition({position:[this.x, this.y + 1]}, invalidPositions)
     ) {
       this.y += 1;
     } else if (
       this.heading === "E" &&
-      this.plateau.isWithinBounds(this.x + 1, this.y)
+      this.plateau.isWithinBounds(this.x + 1, this.y) &&
+      this.isValidPosition({position:[this.x + 1, this.y]}, invalidPositions)
     ) {
       this.x += 1;
     } else if (
       this.heading === "S" &&
-      this.plateau.isWithinBounds(this.x, this.y - 1)
+      this.plateau.isWithinBounds(this.x, this.y - 1) &&
+      this.isValidPosition({position:[this.x, this.y - 1]}, invalidPositions)
     ) {
       this.y -= 1;
     } else if (
       this.heading === "W" &&
-      this.plateau.isWithinBounds(this.x - 1, this.y)
+      this.plateau.isWithinBounds(this.x - 1, this.y) &&
+      this.isValidPosition({position:[this.x - 1, this.y]}, invalidPositions)
     ) {
       this.x -= 1;
     }
@@ -79,7 +84,7 @@ class Robot {
     this.heading = this.DIRECTIONS[(currentIdx + 1) % 4];
   }
 
-  runCommands(commands: string) {
+  runCommands(commands: string, invalidPositions:{ position: [number, number]}[]) {
     // function which runs the commands based on directions given by the user.
     for (let command of commands) {
       if (!this.isValidCommand(command)) {
@@ -91,7 +96,8 @@ class Robot {
       } else if (command === "R") {
         this.rotateR();
       } else if (command === "M") {
-        this.move();
+        this.move(invalidPositions);
+
       }
     }
   }
@@ -100,11 +106,37 @@ class Robot {
     //function to give the position of the particular robot
     return `${this.x} ${this.y} ${this.heading}`;
   }
+  
+  getInvalidPosition():{ position: [number, number]}{
+    return {
+      "position": [this.x, this.y]
+    }
+  }
+
+  isValidPosition(
+    robotNextPosition: { position: [number, number] }, 
+    invalidPositions: { position: [number, number] }[]
+  ) {
+    for (let i = 0; i < invalidPositions.length; i++) {
+      const pos = invalidPositions[i];
+      if (
+        robotNextPosition.position[0] === pos.position[0] && 
+        robotNextPosition.position[1] === pos.position[1]
+      ) {
+        console.log(robotNextPosition.position, "nextPosition");
+        console.log("collision alert");
+        return false; 
+      }
+    }
+    return true; 
+  }
+  
 }
 
 class Controller {
   // class to manage multiple robots and get their final positions
   private robots: Robot[] = [];
+  private invalidPositions: { position: [number, number, string]}[] =[]
 
   initializeRobots(
     plateau: Plateau,
@@ -115,7 +147,7 @@ class Controller {
 
       try {
         const robot = new Robot(x, y, orientation, plateau);
-        robot.runCommands(robotInfo.commands);
+        robot.runCommands(robotInfo.commands, this.robots.map((robot) => robot.getInvalidPosition()) );
         this.robots.push(robot);
       } catch (error:any) {
         console.error(error.message);
@@ -161,14 +193,13 @@ function main(inputData: string) {
 
   const finalPositions = controller.getFinalPositions();
   finalPositions.forEach((position) => console.log(position));
+
 }
 
 const inputData = `5 5
-6 2 N
+1 2 N
 LMLMLMLMM
-3 3 E
-MMRMMRMRRM
-4 6 X
-LMRRMMRLRM`;
+0 4 S
+MLM`;
 
 main(inputData);
