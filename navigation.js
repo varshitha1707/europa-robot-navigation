@@ -10,7 +10,7 @@ var Plateau = /** @class */ (function () {
     return Plateau;
 }());
 var Robot = /** @class */ (function () {
-    function Robot(x, y, heading, plateau) {
+    function Robot(x, y, heading, fuelCapacity, plateau) {
         this.DIRECTIONS = ["N", "E", "S", "W"];
         this.COMMANDS = ["L", "R", "M"];
         if (!this.isValidHeading(heading)) {
@@ -19,6 +19,7 @@ var Robot = /** @class */ (function () {
         this.x = x;
         this.y = y;
         this.heading = heading;
+        this.fuel = fuelCapacity;
         this.plateau = plateau;
     }
     Robot.prototype.isValidHeading = function (heading) {
@@ -29,7 +30,6 @@ var Robot = /** @class */ (function () {
     };
     Robot.prototype.move = function (invalidPositions) {
         // function for movement based on direction
-        console.log("currentPosition", this.x, this.y);
         if (this.heading === "N" &&
             this.plateau.isWithinBounds(this.x, this.y + 1) &&
             this.isValidPosition({ position: [this.x, this.y + 1] }, invalidPositions)) {
@@ -38,8 +38,6 @@ var Robot = /** @class */ (function () {
         else if (this.heading === "E" &&
             this.plateau.isWithinBounds(this.x + 1, this.y) &&
             this.isValidPosition({ position: [this.x + 1, this.y] }, invalidPositions)) {
-            console.log(this.isValidPosition({ position: [this.x + 1, this.y] }, invalidPositions), "is Valid position here");
-            console.log(invalidPositions, "is invalid position");
             this.x += 1;
         }
         else if (this.heading === "S" &&
@@ -68,34 +66,55 @@ var Robot = /** @class */ (function () {
         for (var _i = 0, commands_1 = commands; _i < commands_1.length; _i++) {
             var command = commands_1[_i];
             if (!this.isValidCommand(command)) {
-                throw new Error("Invalid command '".concat(command, "'. Allowed values: L, R, M."));
+                throw new Error("Invalid command '".concat(command, "'. Allowed values: L, R, M, B"));
             }
-            if (command === "L") {
-                this.rotateL();
+            if (this.isFuelLeft()) {
+                if (command === "L") {
+                    this.rotateL();
+                }
+                else if (command === "R") {
+                    this.rotateR();
+                }
+                else if (command === "M") {
+                    this.move(invalidPositions);
+                }
+                this.fuel -= 1;
             }
-            else if (command === "R") {
-                this.rotateR();
-            }
-            else if (command === "M") {
-                this.move(invalidPositions);
+            else {
+                //here the fuel is not there.
             }
         }
     };
     Robot.prototype.getPosition = function () {
         //function to give the position of the particular robot
-        return "".concat(this.x, " ").concat(this.y, " ").concat(this.heading);
+        return "".concat(this.x, " ").concat(this.y, " ").concat(this.heading, " ").concat(this.getFinalFuel());
+    };
+    Robot.prototype.getFinalFuel = function () {
+        if (this.isFuelLeft()) {
+            return "".concat(this.fuel, " is remaining");
+        }
+        else {
+            return 'fuel ran out.';
+        }
     };
     Robot.prototype.getInvalidPosition = function () {
         return {
-            "position": [this.x, this.y]
+            position: [this.x, this.y],
         };
+    };
+    Robot.prototype.isFuelLeft = function () {
+        if (this.fuel <= 0) {
+            return false;
+        }
+        else {
+            return true;
+        }
     };
     Robot.prototype.isValidPosition = function (robotNextPosition, invalidPositions) {
         for (var i = 0; i < invalidPositions.length; i++) {
             var pos = invalidPositions[i];
             if (robotNextPosition.position[0] === pos.position[0] &&
                 robotNextPosition.position[1] === pos.position[1]) {
-                console.log(robotNextPosition.position, "nextPosition");
                 console.log("collision alert");
                 return false;
             }
@@ -114,8 +133,9 @@ var Controller = /** @class */ (function () {
         var _this = this;
         robotsInfo.forEach(function (robotInfo) {
             var _a = robotInfo.position, x = _a[0], y = _a[1], orientation = _a[2];
+            var fuelCapacity = robotInfo.fuelCapacity;
             try {
-                var robot = new Robot(x, y, orientation, plateau);
+                var robot = new Robot(x, y, orientation, fuelCapacity, plateau);
                 robot.runCommands(robotInfo.commands, _this.robots.map(function (robot) { return robot.getInvalidPosition(); }));
                 _this.robots.push(robot);
             }
@@ -124,7 +144,7 @@ var Controller = /** @class */ (function () {
             }
         });
     };
-    Controller.prototype.getFinalPositions = function () {
+    Controller.prototype.getFinalPositionsAndFuel = function () {
         return this.robots.map(function (robot) { return robot.getPosition(); });
     };
     return Controller;
@@ -133,15 +153,16 @@ function parseInput(inputData) {
     var lines = inputData.trim().split("\n");
     var plateauSize = lines[0].split(" ").map(Number);
     var robotsInfo = [];
-    for (var i = 1; i < lines.length; i += 2) {
+    for (var i = 1; i < lines.length; i += 3) {
         var _a = lines[i].split(" "), x = _a[0], y = _a[1], heading = _a[2];
         var position = [
             parseInt(x),
             parseInt(y),
             heading,
         ];
-        var commands = lines[i + 1];
-        robotsInfo.push({ position: position, commands: commands });
+        var fuelCapacity = parseInt(lines[i + 1]);
+        var commands = lines[i + 2];
+        robotsInfo.push({ position: position, commands: commands, fuelCapacity: fuelCapacity });
     }
     return { plateauSize: plateauSize, robotsInfo: robotsInfo };
 }
@@ -151,8 +172,14 @@ function main(inputData) {
     var plateau = new Plateau(plateauSize[0], plateauSize[1]);
     var controller = new Controller();
     controller.initializeRobots(plateau, robotsInfo);
-    var finalPositions = controller.getFinalPositions();
-    finalPositions.forEach(function (position) { return console.log(position); });
+    var finalPositions = controller.getFinalPositionsAndFuel();
+    finalPositions.forEach(function (positionAndFuel) { return console.log(positionAndFuel); });
 }
-var inputData = "5 5\n1 2 N\nLMLMLMLMM\n0 4 S\nMLM";
+var inputData = "5 5\n0 0 N\n10\nMMRMMMLMM";
 main(inputData);
+// 0 3 E
+// 8
+// LMLMLMLMM
+// 1 2 N
+// 10
+// LMLMLMLMM
